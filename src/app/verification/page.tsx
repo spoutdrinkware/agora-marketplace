@@ -1,5 +1,17 @@
 import Link from "next/link";
 
+function Tooltip({ text }: { text: string }) {
+  return (
+    <span className="relative group/tip inline-flex ml-1">
+      <span className="cursor-help text-ink/30 hover:text-aegean transition-colors text-xs" aria-label="More info">ⓘ</span>
+      <span className="pointer-events-none group-hover/tip:pointer-events-auto opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 rounded-lg bg-ink text-white text-xs leading-relaxed shadow-lg z-50">
+        {text}
+        <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-ink" />
+      </span>
+    </span>
+  );
+}
+
 const tiers = [
   {
     name: "Bronze",
@@ -8,11 +20,11 @@ const tiers = [
     timeline: "< 24 hours",
     description: "Automated scanning catches common issues before they reach the marketplace.",
     checks: [
-      "Static code analysis for security vulnerabilities",
-      "Dependency scanning for known CVEs",
-      "License compatibility verification",
-      "Basic functionality smoke tests",
-      "Malware and obfuscation detection",
+      { label: "Static code analysis for security vulnerabilities", tooltip: "We automatically scan the agent\u2019s source code for common security flaws like hardcoded passwords, unsafe data handling, and injection risks." },
+      { label: "Dependency scanning for known CVEs", tooltip: "We check every software library the agent uses against public vulnerability databases to make sure none have known security issues." },
+      { label: "License compatibility verification", tooltip: "We confirm that all third-party code the agent uses has compatible open-source or commercial licenses, so you won\u2019t face legal surprises." },
+      { label: "Basic functionality smoke tests", tooltip: "We run the agent through its core tasks to confirm it actually works as described \u2014 no crashes, no errors on basic operations." },
+      { label: "Malware and obfuscation detection", tooltip: "We scan for hidden malicious code, intentionally obscured logic, or anything designed to disguise what the agent is really doing." },
     ],
     requirements: ["Valid source code or package", "Declared capabilities manifest", "No known vulnerabilities"],
   },
@@ -23,11 +35,11 @@ const tiers = [
     timeline: "2-3 days",
     description: "Identity verification ensures there's a real, accountable builder behind every agent.",
     checks: [
-      "Builder identity verification (KYC)",
-      "Organization validation (if applicable)",
-      "Code provenance and signing verification",
-      "API endpoint security audit",
-      "Data handling and privacy review",
+      { label: "Builder identity verification (KYC)", tooltip: "We verify the real-world identity of the person or team behind the agent, so you know exactly who built what you\u2019re using." },
+      { label: "Organization validation (if applicable)", tooltip: "For agents built by companies, we confirm the business is real and legally registered." },
+      { label: "Code provenance and signing verification", tooltip: "We trace the agent\u2019s code back to its verified author and confirm it hasn\u2019t been tampered with since it was published." },
+      { label: "API endpoint security audit", tooltip: "We test every connection point the agent exposes to make sure it\u2019s properly secured against unauthorized access." },
+      { label: "Data handling and privacy review", tooltip: "We review what data the agent collects, where it stores it, and who it shares it with \u2014 ensuring it respects your privacy." },
     ],
     requirements: ["Bronze verification passed", "Government-issued ID or business registration", "Signed builder agreement"],
   },
@@ -38,15 +50,25 @@ const tiers = [
     timeline: "5-7 days",
     description: "Sandboxed behavioral testing validates that agents do what they claim — and nothing else.",
     checks: [
-      "Isolated sandbox execution testing",
-      "Behavioral analysis against declared capabilities",
-      "Red-team adversarial testing",
-      "Performance and reliability benchmarks",
-      "Data exfiltration and prompt injection testing",
+      { label: "Isolated sandbox execution testing", tooltip: "We run the agent in a sealed-off environment where it can\u2019t affect real systems, watching exactly how it behaves." },
+      { label: "Behavioral analysis against declared capabilities", tooltip: "We verify the agent only does what it says it does \u2014 nothing more, nothing less. No hidden behaviors." },
+      { label: "Red-team adversarial testing", tooltip: "Our security team actively tries to trick, break, or exploit the agent to find weaknesses before bad actors do." },
+      { label: "Performance and reliability benchmarks", tooltip: "We measure how fast, stable, and consistent the agent performs under normal and heavy workloads." },
+      { label: "Data exfiltration and prompt injection testing", tooltip: "We specifically test whether the agent can be tricked into leaking sensitive data or following unauthorized instructions." },
     ],
     requirements: ["Silver verification passed", "Test suite provided", "Sandbox-compatible architecture"],
   },
 ];
+
+const matrixTooltips: Record<string, string> = {
+  "Static Analysis": "We automatically scan the agent\u2019s source code for common security flaws like hardcoded passwords, unsafe data handling, and injection risks.",
+  "Dependency Scanning": "We check every software library the agent uses against public vulnerability databases to make sure none have known security issues.",
+  "Identity Verification": "We verify the real-world identity of the person or team behind the agent, so you know exactly who built what you\u2019re using.",
+  "Code Signing": "We trace the agent\u2019s code back to its verified author and confirm it hasn\u2019t been tampered with since it was published.",
+  "Sandbox Testing": "We run the agent in a sealed-off environment where it can\u2019t affect real systems, watching exactly how it behaves.",
+  "Red-Team Testing": "Our security team actively tries to trick, break, or exploit the agent to find weaknesses before bad actors do.",
+  "Behavioral Analysis": "We verify the agent only does what it says it does \u2014 nothing more, nothing less. No hidden behaviors.",
+};
 
 const matrix = [
   { check: "Static Analysis", bronze: true, silver: true, gold: true },
@@ -93,9 +115,9 @@ export default function Verification() {
                 <h3 className="text-sm font-semibold text-ink mb-3">What We Check</h3>
                 <ul className="space-y-2 mb-6">
                   {tier.checks.map((check) => (
-                    <li key={check} className="flex items-start gap-2 text-sm text-ink/70">
+                    <li key={check.label} className="flex items-start gap-2 text-sm text-ink/70">
                       <span className="text-aegean mt-0.5">&#10003;</span>
-                      {check}
+                      <span>{check.label}<Tooltip text={check.tooltip} /></span>
                     </li>
                   ))}
                 </ul>
@@ -131,7 +153,9 @@ export default function Verification() {
               <tbody>
                 {matrix.map((row) => (
                   <tr key={row.check} className="border-b border-limestone/10 last:border-0">
-                    <td className="p-4 text-sm text-ink/70">{row.check}</td>
+                    <td className="p-4 text-sm text-ink/70">
+                      <span>{row.check}{matrixTooltips[row.check] && <Tooltip text={matrixTooltips[row.check]} />}</span>
+                    </td>
                     <td className="p-4 text-center">{row.bronze ? "&#10003;" : "—"}</td>
                     <td className="p-4 text-center">{row.silver ? "&#10003;" : "—"}</td>
                     <td className="p-4 text-center">{row.gold ? "&#10003;" : "—"}</td>
