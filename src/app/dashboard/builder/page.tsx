@@ -1,6 +1,6 @@
 import Link from "next/link";
 import VerificationBadge from "@/components/VerificationBadge";
-import { agents } from "@/data/agents";
+import { agents } from "@/data/agents"; // Mock data for dashboard (requires auth to query real data)
 
 export default function BuilderDashboard() {
   // Mock: show all agents as if owned by current builder

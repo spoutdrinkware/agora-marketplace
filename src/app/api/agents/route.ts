@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchAgents, agents } from "@/data/agents";
+import { searchAgentsDb } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -7,10 +7,10 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get("category") || undefined;
   const framework = searchParams.get("framework") || undefined;
 
-  const results = searchAgents(q, category, framework);
+  const results = await searchAgentsDb(q, category, framework);
 
   return NextResponse.json({
-    agents: results.map(({ id, builderId, ...rest }) => rest),
+    agents: results.map(({ builderId, ...rest }) => rest),
     total: results.length,
   });
 }

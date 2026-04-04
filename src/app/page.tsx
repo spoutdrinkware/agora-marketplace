@@ -1,9 +1,13 @@
 import Link from "next/link";
 import AgentCard from "@/components/AgentCard";
-import { agents, categories } from "@/data/agents";
+import { getFeaturedAgents, getAllAgents, getCategories } from "@/lib/db";
 
-export default function Home() {
-  const featuredAgents = agents.filter((a) => a.verificationTier === "gold").slice(0, 6);
+export default async function Home() {
+  const [featuredAgents, allAgents, categories] = await Promise.all([
+    getFeaturedAgents(6),
+    getAllAgents(),
+    getCategories(),
+  ]);
 
   return (
     <div>

@@ -1,47 +1,18 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import VerificationBadge from "@/components/VerificationBadge";
-import { getAgentBySlug, getAgentsByBuilder } from "@/data/agents";
 import AgentCard from "@/components/AgentCard";
+import HireForm from "@/components/HireForm";
+import { getAgentBySlug, getAgentsByBuilder } from "@/lib/db";
 
-export default function AgentDetail() {
-  const params = useParams();
-  const agent = getAgentBySlug(params.slug as string);
-  const [hireForm, setHireForm] = useState({ email: "", useCase: "", budgetRange: "< $100/mo" });
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+export default async function AgentDetail({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const agent = await getAgentBySlug(slug);
+  if (!agent) notFound();
 
-  if (!agent) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h1 className="font-display text-4xl font-bold text-ink mb-4">Agent Not Found</h1>
-        <p className="text-ink/60 mb-8">The agent you&apos;re looking for doesn&apos;t exist.</p>
-        <Link href="/agents" className="text-aegean hover:underline">Browse all agents &rarr;</Link>
-      </div>
-    );
-  }
-
-  const relatedAgents = getAgentsByBuilder(agent.builderId)
+  const relatedAgents = (await getAgentsByBuilder(agent.builderId))
     .filter((a) => a.id !== agent.id)
     .slice(0, 3);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await fetch("/api/hire-requests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentSlug: agent!.slug, ...hireForm }),
-      });
-      setSubmitted(true);
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -114,57 +85,7 @@ export default function AgentDetail() {
               <div className="text-3xl font-bold text-aegean mb-1">{agent.pricing}</div>
               <div className="text-sm text-ink/50">Starting price</div>
             </div>
-
-            {submitted ? (
-              <div className="text-center py-6">
-                <div className="text-4xl mb-3">✓</div>
-                <h3 className="font-display text-xl font-semibold mb-2">Request Submitted</h3>
-                <p className="text-sm text-ink/60">We&apos;ll connect you with {agent.builderName} shortly.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Your Email</label>
-                  <input
-                    type="email"
-                    required
-                    value={hireForm.email}
-                    onChange={(e) => setHireForm((f) => ({ ...f, email: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-limestone/50 text-sm focus:outline-none focus:border-aegean"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Use Case</label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={hireForm.useCase}
-                    onChange={(e) => setHireForm((f) => ({ ...f, useCase: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-limestone/50 text-sm focus:outline-none focus:border-aegean"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Budget Range</label>
-                  <select
-                    value={hireForm.budgetRange}
-                    onChange={(e) => setHireForm((f) => ({ ...f, budgetRange: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-limestone/50 text-sm focus:outline-none focus:border-aegean"
-                  >
-                    <option>{"< $100/mo"}</option>
-                    <option>$100 - $250/mo</option>
-                    <option>$250 - $500/mo</option>
-                    <option>{"> $500/mo"}</option>
-                  </select>
-                </div>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-terracotta text-white py-3 rounded-lg font-medium hover:bg-terracotta/90 transition-colors disabled:opacity-50"
-                >
-                  {submitting ? "Submitting..." : "Request to Hire"}
-                </button>
-              </form>
-            )}
+            <HireForm agentSlug={agent.slug} builderName={agent.builderName} />
           </div>
         </div>
       </div>

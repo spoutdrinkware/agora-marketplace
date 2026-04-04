@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AgentCard from "@/components/AgentCard";
-import { getBuilderById, getAgentsByBuilder } from "@/data/agents";
+import { getBuilderById, getAgentsByBuilder } from "@/lib/db";
 
 export default async function BuilderProfile({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const builder = getBuilderById(id);
+  const builder = await getBuilderById(id);
   if (!builder) notFound();
 
-  const builderAgents = getAgentsByBuilder(id);
+  const builderAgents = await getAgentsByBuilder(id);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

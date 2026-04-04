@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const hireRequests: Array<{
-  id: string;
-  agentSlug: string;
-  email: string;
-  useCase: string;
-  budgetRange: string;
-  status: string;
-  createdAt: string;
-}> = [];
+import { createHireRequest } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -21,20 +12,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const hireRequest = {
-    id: `hr_${Date.now()}`,
-    agentSlug,
-    email,
-    useCase,
-    budgetRange: budgetRange || "Not specified",
-    status: "pending",
-    createdAt: new Date().toISOString(),
-  };
+  const result = await createHireRequest({ agentSlug, email, useCase, budgetRange });
 
-  hireRequests.push(hireRequest);
+  if (result) {
+    return NextResponse.json({
+      id: result.id,
+      status: result.status,
+      message: "Hire request submitted successfully",
+    });
+  }
 
+  // Fallback: in-memory response when Supabase isn't available
   return NextResponse.json({
-    id: hireRequest.id,
+    id: `hr_${Date.now()}`,
     status: "pending",
     message: "Hire request submitted successfully",
   });
