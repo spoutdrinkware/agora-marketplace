@@ -6,17 +6,22 @@ export default function HireForm({ agentSlug, builderName }: { agentSlug: string
   const [hireForm, setHireForm] = useState({ email: "", useCase: "", budgetRange: "< $100/mo" });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setSubmitting(true);
     try {
-      await fetch("/api/hire-requests", {
+      const res = await fetch("/api/hire-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ agentSlug, ...hireForm }),
       });
+      if (!res.ok) throw new Error("Failed to submit request");
       setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -67,6 +72,9 @@ export default function HireForm({ agentSlug, builderName }: { agentSlug: string
           <option>{"> $500/mo"}</option>
         </select>
       </div>
+      {error && (
+        <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+      )}
       <button
         type="submit"
         disabled={submitting}
