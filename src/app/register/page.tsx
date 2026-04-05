@@ -1,18 +1,74 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Register() {
+  const router = useRouter();
   const [role, setRole] = useState<"builder" | "business">("builder");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [info, setInfo] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) return;
-    setInfo("Registration is coming soon. Check back shortly!");
+    setError("");
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { role },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    setSuccess(true);
+    setLoading(false);
+  }
+
+  async function handleOAuth(provider: "google" | "github") {
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/${role}`,
+      },
+    });
+    if (authError) setError(authError.message);
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-md text-center">
+          <div className="text-5xl mb-4">&#9993;</div>
+          <h1 className="font-display text-3xl font-bold text-ink mb-3">Check Your Email</h1>
+          <p className="text-ink/60 mb-6">
+            We sent a confirmation link to <strong>{email}</strong>.
+            Click the link to activate your account.
+          </p>
+          <Link
+            href="/login"
+            className="text-aegean hover:underline text-sm"
+          >
+            Back to sign in
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -24,7 +80,6 @@ export default function Register() {
         </div>
 
         <div className="bg-white border border-limestone/30 rounded-xl p-8">
-          {/* Role selector */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-limestone/20 rounded-lg mb-6">
             <button
               onClick={() => setRole("builder")}
@@ -68,14 +123,15 @@ export default function Register() {
                 placeholder="At least 8 characters"
               />
             </div>
-            {info && (
-              <p className="text-aegean text-sm bg-aegean/5 border border-aegean/20 rounded-lg px-3 py-2">{info}</p>
+            {error && (
+              <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
             )}
             <button
               type="submit"
-              className="w-full bg-aegean text-white py-3 rounded-lg font-medium hover:bg-aegean/90 transition-colors"
+              disabled={loading}
+              className="w-full bg-aegean text-white py-3 rounded-lg font-medium hover:bg-aegean/90 transition-colors disabled:opacity-50"
             >
-              Create {role === "builder" ? "Builder" : "Business"} Account
+              {loading ? "Creating account..." : `Create ${role === "builder" ? "Builder" : "Business"} Account`}
             </button>
           </form>
 
@@ -86,10 +142,16 @@ export default function Register() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button className="flex items-center justify-center gap-2 px-4 py-3 border border-limestone/30 rounded-lg text-sm text-ink hover:bg-limestone/10 transition-colors">
+            <button
+              onClick={() => handleOAuth("google")}
+              className="flex items-center justify-center gap-2 px-4 py-3 border border-limestone/30 rounded-lg text-sm text-ink hover:bg-limestone/10 transition-colors"
+            >
               Google
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-3 border border-limestone/30 rounded-lg text-sm text-ink hover:bg-limestone/10 transition-colors">
+            <button
+              onClick={() => handleOAuth("github")}
+              className="flex items-center justify-center gap-2 px-4 py-3 border border-limestone/30 rounded-lg text-sm text-ink hover:bg-limestone/10 transition-colors"
+            >
               GitHub
             </button>
           </div>

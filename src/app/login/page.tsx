@@ -1,17 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Login() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/dashboard/builder";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [info, setInfo] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) return;
-    setInfo("Authentication is coming soon. Check back shortly!");
+    setError("");
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push(redirect);
+    router.refresh();
+  }
+
+  async function handleOAuth(provider: "google" | "github") {
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
+      },
+    });
+    if (authError) setError(authError.message);
   }
 
   return (
@@ -46,14 +87,15 @@ export default function Login() {
                 className="w-full px-4 py-3 rounded-lg border border-limestone/50 focus:outline-none focus:border-aegean focus:ring-1 focus:ring-aegean"
               />
             </div>
-            {info && (
-              <p className="text-aegean text-sm bg-aegean/5 border border-aegean/20 rounded-lg px-3 py-2">{info}</p>
+            {error && (
+              <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
             )}
             <button
               type="submit"
-              className="w-full bg-aegean text-white py-3 rounded-lg font-medium hover:bg-aegean/90 transition-colors"
+              disabled={loading}
+              className="w-full bg-aegean text-white py-3 rounded-lg font-medium hover:bg-aegean/90 transition-colors disabled:opacity-50"
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
@@ -64,10 +106,16 @@ export default function Login() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button className="flex items-center justify-center gap-2 px-4 py-3 border border-limestone/30 rounded-lg text-sm text-ink hover:bg-limestone/10 transition-colors">
+            <button
+              onClick={() => handleOAuth("google")}
+              className="flex items-center justify-center gap-2 px-4 py-3 border border-limestone/30 rounded-lg text-sm text-ink hover:bg-limestone/10 transition-colors"
+            >
               Google
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-3 border border-limestone/30 rounded-lg text-sm text-ink hover:bg-limestone/10 transition-colors">
+            <button
+              onClick={() => handleOAuth("github")}
+              className="flex items-center justify-center gap-2 px-4 py-3 border border-limestone/30 rounded-lg text-sm text-ink hover:bg-limestone/10 transition-colors"
+            >
               GitHub
             </button>
           </div>
