@@ -275,6 +275,39 @@ export async function createHireRequest(params: {
   return { id: data.id, status: data.status };
 }
 
+export interface HireRequestRow {
+  id: string;
+  agentName: string;
+  agentSlug: string;
+  useCase: string;
+  budgetRange: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function getHireRequestsByEmail(email: string): Promise<HireRequestRow[]> {
+  const supabase = createServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("hire_requests")
+    .select("id, use_case, budget_range, status, created_at, agents!agent_id(name, slug)")
+    .eq("email", email)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((r: any) => ({
+    id: r.id,
+    agentName: r.agents?.name || "Unknown",
+    agentSlug: r.agents?.slug || "",
+    useCase: r.use_case || "",
+    budgetRange: r.budget_range || "",
+    status: r.status || "pending",
+    createdAt: r.created_at?.split("T")[0] || "",
+  }));
+}
+
 export async function getCategories(): Promise<string[]> {
   const supabase = createServerClient();
   if (!supabase) return mockCategories;
