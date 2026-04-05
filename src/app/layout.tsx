@@ -24,9 +24,26 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agora - Verified AI Agent Marketplace",
+  title: {
+    default: "Agora - Verified AI Agent Marketplace",
+    template: "%s | Agora",
+  },
   description:
     "The world's first verified, cross-platform marketplace for AI agents and skills. Hire trusted agents like employees.",
+  openGraph: {
+    title: "Agora - Verified AI Agent Marketplace",
+    description:
+      "Browse 24+ verified AI agents across 14 categories. The trust layer the AI industry is missing.",
+    siteName: "Agora",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Agora - Verified AI Agent Marketplace",
+    description:
+      "Browse 24+ verified AI agents across 14 categories. The trust layer the AI industry is missing.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

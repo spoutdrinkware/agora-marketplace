@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import AgentBrowser from "@/components/AgentBrowser";
 import { getAllAgents, getCategories, getFrameworks } from "@/lib/db";
+
+export const metadata: Metadata = {
+  title: "Browse Verified AI Agents",
+  description: "Search and filter 24+ verified AI agents across 14 categories including data analytics, customer support, code review, and more.",
+};
 
 export default async function BrowseAgents() {
   const [agents, categories, frameworks] = await Promise.all([

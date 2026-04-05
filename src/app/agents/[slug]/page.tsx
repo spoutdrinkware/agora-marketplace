@@ -1,9 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import VerificationBadge from "@/components/VerificationBadge";
 import AgentCard from "@/components/AgentCard";
 import HireForm from "@/components/HireForm";
 import { getAgentBySlug, getAgentsByBuilder } from "@/lib/db";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const agent = await getAgentBySlug(slug);
+  if (!agent) return { title: "Agent Not Found" };
+  return {
+    title: `${agent.name} - ${agent.verificationTier.charAt(0).toUpperCase() + agent.verificationTier.slice(1)} Verified`,
+    description: agent.description.slice(0, 160),
+    openGraph: {
+      title: `${agent.name} on Agora`,
+      description: `${agent.verificationTier.toUpperCase()} verified ${agent.category} agent. ${agent.pricing}. ${agent.hireCount} hires.`,
+    },
+  };
+}
 
 export default async function AgentDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

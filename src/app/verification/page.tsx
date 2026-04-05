@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Verification System",
+  description: "Learn about Agora's three-tier verification system: Bronze automated scanning, Silver expert review, and Gold continuous monitoring.",
+};
 
 function Tooltip({ text }: { text: string }) {
   return (
